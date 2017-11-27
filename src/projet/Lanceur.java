@@ -7,6 +7,6 @@ public class Lanceur {
      * EcritureSorties(); lecture.start(); ecriture.start();
      */
 
-    Interface interfacee = new Interface();
+    InterfaceGraphique interfaceGraphique = new InterfaceGraphique();
   }
 }

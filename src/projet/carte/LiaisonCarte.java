@@ -50,19 +50,6 @@ final class LiaisonCarte {
   private static int[] sortie = new int[7];
 
   /**
-   * Contient le numéro de la carte afin de pouvoir y accéder.
-   * <p>
-   * Cette variable est utilisée par toutes les méthodes de la classe afin
-   * d'initier le dialogue avec la carte.
-   * </p>
-   * 
-   * @see LiaisonCarte#lectureComplete()
-   * @see LiaisonCarte#sortieDigitale(int, boolean)
-   * @see LiaisonCarte#sortieAnalogique(int, int)
-   */
-  private static final int APPAREIL = 0;
-
-  /**
    * Constructeur de la classe.
    * <p>
    * Cette classe n'étant pas prévue pour être instanciée, ce constructeur a comme
@@ -70,6 +57,38 @@ final class LiaisonCarte {
    * </p>
    */
   private LiaisonCarte() {
+  }
+
+  /**
+   * Permet de se connecter à la carte.
+   * <p>
+   * Cette méthode est la première à appeler pour travailler avec la carte, toutes
+   * les autres méthodes assumant que l'on est déjà connecté. Il faut indiquer
+   * l'adresse où chercher la carte.
+   * </p>
+   * 
+   * @param adresse
+   *          l'adresse où chercher la carte
+   * 
+   * @throws JK8055Exception
+   *           quand une erreur intervient lors du dialogue avec la carte
+   */
+  public static void connexionCarte(int adresse) throws JK8055Exception {
+    JK8055.getInstance().OpenDevice(adresse);
+  }
+
+  /**
+   * Permet de se déconnecter de la carte.
+   * <p>
+   * À appeler après avoir fini de travailler avec la carte, aucune des autres
+   * méthodes de cette classe ne va d'elle-même se déconnecter de la carte.
+   * </p>
+   * 
+   * @throws JK8055Exception
+   *           quand une erreur intervient lors du dialogue avec la carte
+   */
+  public static void deconnexionCarte() throws JK8055Exception {
+    JK8055.getInstance().CloseDevice();
   }
 
   /**
@@ -87,15 +106,12 @@ final class LiaisonCarte {
    * 
    * @throws JK8055Exception
    *           quand une erreur intervient lors du dialogue avec la carte
-   * 
-   * @see LiaisonCarte#APPAREIL
    */
   static int[] lectureComplete() throws JK8055Exception {
-    JK8055 jk8055 = JK8055.getInstance();
-    jk8055.OpenDevice(APPAREIL);
+    JK8055 appareil = JK8055.getInstance();
 
-    int valeursDigitales = jk8055.ReadAllDigital();
-    AllAnalog valeursAnalogiques = jk8055.ReadAllAnalog();
+    int valeursDigitales = appareil.ReadAllDigital();
+    AllAnalog valeursAnalogiques = appareil.ReadAllAnalog();
 
     int[] retour = new int[7];
     String conversion = Integer.toBinaryString(valeursDigitales);
@@ -127,15 +143,13 @@ final class LiaisonCarte {
    *           quand une erreur intervient lors du dialogue avec la carte
    * 
    * @see LiaisonCarte#sortie
-   * @see LiaisonCarte#APPAREIL
    */
   static synchronized void sortieDigitale(int chaine, boolean valeur) throws JK8055Exception {
     if (chaine < 1 || chaine > 5) {
       throw new InvalidParameterException("Les sorties digitales vont de 1 à 5.");
     }
 
-    JK8055 jk8055 = JK8055.getInstance();
-    jk8055.OpenDevice(APPAREIL);
+    JK8055 appareil = JK8055.getInstance();
 
     int[] tmp = sortie.clone();
     tmp[chaine - 1] = valeur ? 1 : 0;
@@ -148,7 +162,7 @@ final class LiaisonCarte {
 
     int valeursDigitales = Integer.parseInt(conversion, 2);
 
-    jk8055.SetAllValues(valeursDigitales, sortie[5], sortie[6]);
+    appareil.SetAllValues(valeursDigitales, sortie[5], sortie[6]);
     sortie[chaine - 1] = valeur ? 1 : 0;
   }
 
@@ -169,7 +183,6 @@ final class LiaisonCarte {
    *           quand une erreur intervient lors du dialogue avec la carte
    * 
    * @see LiaisonCarte#sortie
-   * @see LiaisonCarte#APPAREIL
    */
   static synchronized void sortieAnalogique(int chaine, int valeur) throws JK8055Exception {
     if (valeur < 0 || valeur > 255) {
@@ -179,8 +192,7 @@ final class LiaisonCarte {
       throw new InvalidParameterException("Les sorties analogiques vont de 1 à 2.");
     }
 
-    JK8055 jk8055 = JK8055.getInstance();
-    jk8055.OpenDevice(APPAREIL);
+    JK8055 appareil = JK8055.getInstance();
 
     StringBuffer tampon = new StringBuffer();
     for (int i = 0; i < 5; i++) {
@@ -191,10 +203,10 @@ final class LiaisonCarte {
     int valeursDigitales = Integer.parseInt(conversion, 2);
 
     if (chaine == 1) {
-      jk8055.SetAllValues(valeursDigitales, valeur, sortie[6]);
+      appareil.SetAllValues(valeursDigitales, valeur, sortie[6]);
       sortie[5] = valeur;
     } else {
-      jk8055.SetAllValues(valeursDigitales, sortie[5], valeur);
+      appareil.SetAllValues(valeursDigitales, sortie[5], valeur);
       sortie[6] = valeur;
     }
   }
