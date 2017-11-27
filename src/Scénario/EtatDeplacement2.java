@@ -2,18 +2,6 @@ package Scénario;
 
 public class EtatDeplacement2 extends EtatScenario{
 
-
-	@Override
-	public EtatScenario start() {
-		return this;
-		
-	}
-
-	@Override
-	public EtatScenario miseEnPlace1() {
-		return this;		
-	}
-
 	@Override
 	public EtatScenario miseEnPlace2() {
 		return new EtatLecturePoids();
@@ -23,22 +11,11 @@ public class EtatDeplacement2 extends EtatScenario{
 	@Override
 	public EtatScenario defaut() {
 		return new EtatDefaut(this);
-		
 	}
 
 	@Override
-	public EtatScenario remplissage(int remplissage) {
-		return this;
+	public int[] getSorties() {
+		int[] sorties = {1, 0, 0, 1, 0, remplissage};
+		return sorties;
 	}
-
-	@Override
-	public EtatScenario lecturePoids(int poidsMax) {
-		return this;
-	}
-
-	@Override
-	public EtatScenario sortie() {
-		return this;
-	}
-
 }

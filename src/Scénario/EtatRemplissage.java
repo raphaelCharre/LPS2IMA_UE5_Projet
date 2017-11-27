@@ -2,45 +2,21 @@ package Scénario;
 
 public class EtatRemplissage extends EtatScenario{
 	@Override
-	public EtatScenario start() {
-		return this;
-		
-	}
-
-	@Override
-	public EtatScenario miseEnPlace1() {
-		return this;
-		
-	}
-
-
-	@Override
-	public EtatScenario miseEnPlace2() {
-		return this;
-		
-	}
-
-
-	@Override
 	public EtatScenario defaut() {
 		return new EtatDefaut(this);
 		
 	}
 
 	@Override
-	public EtatScenario remplissage(int remplissage) {
+	public EtatScenario remplissage(int remplissage, int poids) {
 		EtatScenario.remplissage = remplissage;
-		return this;
+		EtatScenario.poids = poids;
+		return remplissage < 255 ? this : new EtatDeplacement2();
 	}
-
+	
 	@Override
-	public EtatScenario lecturePoids(int poidsMax) {
-		return this;
+	public int[] getSorties() {
+		int[] sorties = {1, 0, 0, 0, 0, remplissage};
+		return sorties;
 	}
-
-	@Override
-	public EtatScenario sortie() {
-		return this;
-	}
-
 }

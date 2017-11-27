@@ -3,14 +3,17 @@ package Scénario;
 import net.sf.libk8055.jk8055.JK8055Exception;
 import projet.carte.EcritureSorties;
 import projet.carte.LectureEntrees;
+import projet.carte.LiaisonCarte;
 
 public class Scenario extends Thread{
 	private static Scenario instance;
 	
 	private EtatScenario etat;
+	private LiaisonCarte lc;
 	private LectureEntrees le;
 	private EcritureSorties es;
 	
+	private boolean continuer = true;
 	private Scenario() {
 		reset();
 		this.le = LectureEntrees.recupererInstance();
@@ -26,7 +29,7 @@ public class Scenario extends Thread{
 	}
 	
 	public void reset() {
-		this.etat = new EtatDepart();
+		this.etat = new EtatEteint();
 	}
 	
 	public EtatScenario getEtat() {
@@ -34,24 +37,36 @@ public class Scenario extends Thread{
 	}
 	
 	public void run() {
-		boolean continuer = true;
-		le.start();
-		es.start();
-		
+		try {
+			lc.connexionCarte(0);
+			le.start();
+			es.start();
+		} catch (JK8055Exception e1) {
+			System.err.println("Connexion à la carte impossible.");
+			continuer = false;
+		}
+
 		while(continuer) {
 			try {
 				int[] entrees = le.recupererEntrees();
 				
 				//Entrees digitales
-				if(entrees[0] == 1) etat = etat.start();
+				if(entrees[0] == 0) {
+					if(!etat.getClass().toString().equals("EtatEteint"))
+						reset();
+				}else {
+					etat = etat.start();
+				}
 				if(entrees[1] == 1) etat = etat.miseEnPlace1();
 				if(entrees[2] == 1) etat = etat.miseEnPlace2();
 				if(entrees[3] == 1) etat = etat.sortie();
 				if(entrees[4] == 1) etat = etat.defaut();
 				
 				//Entrees analogiques
-				etat = etat.remplissage(entrees[5]);
-				etat = etat.lecturePoids(entrees[6]);
+				etat = etat.remplissage(entrees[5], entrees[6]);
+				etat = etat.lecturePoids(200);
+				
+				
 				
 				sleep(50);
 			} catch (JK8055Exception e) {
@@ -62,9 +77,20 @@ public class Scenario extends Thread{
 				continuer = false;
 			}
 		}
+		extinction();
+	}
+	
+	public void finScenario() {
+		continuer = false;
+	}
+	
+	private void extinction() {
 		le.finLecture();
 		es.finTache();
-		
-		
+		try {
+			lc.deconnexionCarte();
+		} catch (JK8055Exception e) {
+			System.err.println("Impossible de déconnecter la carte.");
+		}
 	}
 }
